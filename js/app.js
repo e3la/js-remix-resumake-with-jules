@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     templateSelect.value = resumeData.selectedTemplate || 'modern';
   }
 
+  // Accordion section open state
+  const openSections = { basics: true, work: false, education: false, projects: false, skills: false, awards: false };
+
   // Initial render
   renderForm();
   updatePreview();
@@ -225,99 +228,134 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formContainer.innerHTML = `
       <!-- BASICS SECTION -->
-      <section id="section-basics" class="form-section">
-        <h3 class="section-heading"><i class="fas fa-user"></i> Personal Information</h3>
-        <div class="form-grid-2">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" data-key="basics.name" value="${escapeAttr(resumeData.basics?.name)}" placeholder="Jane Doe">
-          </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" data-key="basics.email" value="${escapeAttr(resumeData.basics?.email)}" placeholder="jane@example.com">
-          </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="text" data-key="basics.phone" value="${escapeAttr(resumeData.basics?.phone)}" placeholder="(555) 000-0000">
-          </div>
-          <div class="form-group">
-            <label>Location / City, State</label>
-            <input type="text" data-key="basics.location.address" value="${escapeAttr(resumeData.basics?.location?.address)}" placeholder="San Francisco, CA">
-          </div>
-          <div class="form-group grid-span-2">
-            <label>Website / Portfolio URL</label>
-            <input type="url" data-key="basics.website" value="${escapeAttr(resumeData.basics?.website)}" placeholder="https://janedoe.dev">
-          </div>
-          <div class="form-group grid-span-2">
-            <label>Summary / Professional Profile</label>
-            <textarea data-key="basics.summary" rows="3" placeholder="Brief statement summarizing your experience and goals...">${escapeHtmlText(resumeData.basics?.summary)}</textarea>
+      <section id="section-basics" class="form-section ${openSections.basics ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('basics')">
+          <span class="accordion-title"><i class="fas fa-user"></i> Personal Information</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" data-key="basics.name" value="${escapeAttr(resumeData.basics?.name)}" placeholder="Jane Doe">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" data-key="basics.email" value="${escapeAttr(resumeData.basics?.email)}" placeholder="jane@example.com">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" data-key="basics.phone" value="${escapeAttr(resumeData.basics?.phone)}" placeholder="(555) 000-0000">
+            </div>
+            <div class="form-group">
+              <label>Location / City, State</label>
+              <input type="text" data-key="basics.location.address" value="${escapeAttr(resumeData.basics?.location?.address)}" placeholder="San Francisco, CA">
+            </div>
+            <div class="form-group grid-span-2">
+              <label>Website / Portfolio URL</label>
+              <input type="url" data-key="basics.website" value="${escapeAttr(resumeData.basics?.website)}" placeholder="https://janedoe.dev">
+            </div>
+            <div class="form-group grid-span-2">
+              <label>Summary / Professional Profile</label>
+              <textarea data-key="basics.summary" rows="3" placeholder="Brief statement summarizing your experience and goals...">${escapeHtmlText(resumeData.basics?.summary)}</textarea>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- WORK EXPERIENCE SECTION -->
-      <section id="section-work" class="form-section">
-        <div class="section-header-flex">
-          <h3 class="section-heading"><i class="fas fa-briefcase"></i> Work Experience</h3>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn-icon danger" onclick="clearSection('work')" title="Clear entire Work section"><i class="fas fa-trash"></i></button>
-            <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
+      <section id="section-work" class="form-section ${openSections.work ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('work')">
+          <span class="accordion-title"><i class="fas fa-briefcase"></i> Work Experience</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="section-header-flex">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" class="btn-icon danger" onclick="clearSection('work')" title="Clear entire Work section"><i class="fas fa-trash"></i></button>
+              <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
+            </div>
           </div>
+          <div id="work-items-container"></div>
+          <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-work-btn"><i class="fas fa-plus"></i> Add Work Experience</button>
         </div>
-        <div id="work-items-container"></div>
-        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-work-btn"><i class="fas fa-plus"></i> Add Work Experience</button>
       </section>
 
       <!-- EDUCATION SECTION -->
-      <section id="section-education" class="form-section">
-        <div class="section-header-flex">
-          <h3 class="section-heading"><i class="fas fa-graduation-cap"></i> Education</h3>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn-icon danger" onclick="clearSection('education')" title="Clear entire Education section"><i class="fas fa-trash"></i></button>
-            <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
+      <section id="section-education" class="form-section ${openSections.education ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('education')">
+          <span class="accordion-title"><i class="fas fa-graduation-cap"></i> Education</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="section-header-flex">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" class="btn-icon danger" onclick="clearSection('education')" title="Clear entire Education section"><i class="fas fa-trash"></i></button>
+              <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
+            </div>
           </div>
+          <div id="education-items-container"></div>
+          <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-education-btn"><i class="fas fa-plus"></i> Add Education</button>
         </div>
-        <div id="education-items-container"></div>
-        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-education-btn"><i class="fas fa-plus"></i> Add Education</button>
       </section>
 
       <!-- PROJECTS SECTION -->
-      <section id="section-projects" class="form-section">
-        <div class="section-header-flex">
-          <h3 class="section-heading"><i class="fas fa-code-branch"></i> Projects</h3>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn-icon danger" onclick="clearSection('projects')" title="Clear entire Projects section"><i class="fas fa-trash"></i></button>
-            <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
+      <section id="section-projects" class="form-section ${openSections.projects ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('projects')">
+          <span class="accordion-title"><i class="fas fa-code-branch"></i> Projects</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="section-header-flex">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" class="btn-icon danger" onclick="clearSection('projects')" title="Clear entire Projects section"><i class="fas fa-trash"></i></button>
+              <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
+            </div>
           </div>
+          <div id="projects-items-container"></div>
+          <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-projects-btn"><i class="fas fa-plus"></i> Add Project</button>
         </div>
-        <div id="projects-items-container"></div>
-        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-projects-btn"><i class="fas fa-plus"></i> Add Project</button>
       </section>
 
       <!-- SKILLS SECTION -->
-      <section id="section-skills" class="form-section">
-        <div class="section-header-flex">
-          <h3 class="section-heading"><i class="fas fa-tools"></i> Skills</h3>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn-icon danger" onclick="clearSection('skills')" title="Clear entire Skills section"><i class="fas fa-trash"></i></button>
-            <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
+      <section id="section-skills" class="form-section ${openSections.skills ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('skills')">
+          <span class="accordion-title"><i class="fas fa-tools"></i> Skills</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="section-header-flex">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" class="btn-icon danger" onclick="clearSection('skills')" title="Clear entire Skills section"><i class="fas fa-trash"></i></button>
+              <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
+            </div>
           </div>
+          <div id="skills-items-container"></div>
+          <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-skills-btn"><i class="fas fa-plus"></i> Add Skill Group</button>
         </div>
-        <div id="skills-items-container"></div>
-        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-skills-btn"><i class="fas fa-plus"></i> Add Skill Group</button>
       </section>
 
       <!-- AWARDS SECTION -->
-      <section id="section-awards" class="form-section">
-        <div class="section-header-flex">
-          <h3 class="section-heading"><i class="fas fa-trophy"></i> Awards & Certifications</h3>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button type="button" class="btn-icon danger" onclick="clearSection('awards')" title="Clear entire Awards section"><i class="fas fa-trash"></i></button>
-            <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
+      <section id="section-awards" class="form-section ${openSections.awards ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('awards')">
+          <span class="accordion-title"><i class="fas fa-trophy"></i> Awards & Certifications</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="section-header-flex">
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" class="btn-icon danger" onclick="clearSection('awards')" title="Clear entire Awards section"><i class="fas fa-trash"></i></button>
+              <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
+            </div>
           </div>
+          <div id="awards-items-container"></div>
+          <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-awards-btn"><i class="fas fa-plus"></i> Add Award</button>
         </div>
-        <div id="awards-items-container"></div>
-        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-awards-btn"><i class="fas fa-plus"></i> Add Award</button>
       </section>
     `;
 
@@ -559,6 +597,84 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
 
     container.querySelectorAll('input').forEach(input => input.addEventListener('input', handleInputChange));
+  }
+
+  // Accordion Toggle
+  window.toggleAccordion = (sectionKey) => {
+    openSections[sectionKey] = !openSections[sectionKey];
+    renderForm();
+  };
+
+  // Standalone Print View Listener
+  document.getElementById('btn-print-view')?.addEventListener('click', () => {
+    openPrintWindow();
+  });
+
+  function openPrintWindow() {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pop-up blocked! Please allow pop-ups for this site to open the standalone print view.');
+      return;
+    }
+
+    const previewHTML = document.getElementById('resume-preview').innerHTML;
+    const templateClass = `template-${resumeData.selectedTemplate || 'modern'}`;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>${escapeHtmlText(resumeData.basics?.name || 'Resume')} - Print View</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="css/style.css">
+        <style>
+          body {
+            background: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            overflow-y: auto;
+            height: auto;
+          }
+          .standalone-wrapper {
+            background: #fff;
+            color: #111;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 0.6in 0.75in;
+            width: 8.5in;
+            min-height: 11in;
+            box-sizing: border-box;
+          }
+          @media print {
+            body {
+              background: #fff;
+              padding: 0;
+              display: block;
+            }
+            .standalone-wrapper {
+              box-shadow: none;
+              padding: 0;
+              width: 100%;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="standalone-wrapper ${templateClass}">
+          ${previewHTML}
+        </div>
+        <script>
+          // Automatically trigger print dialog on render if desired, or user can use native browser print controls
+          window.addEventListener('load', () => {
+            // setTimeout(() => window.print(), 300);
+          });
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   // --- Global Window Helpers for Dynamic Delete/Key handlers ---
