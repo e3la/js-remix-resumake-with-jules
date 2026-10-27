@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Accordion section open state
-  const openSections = { basics: true, work: false, education: false, projects: false, skills: false, awards: false };
+  const openSections = { theme: false, basics: true, work: false, education: false, projects: false, skills: false, awards: false };
 
   // Initial render
   renderForm();
@@ -171,20 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Navigation tab scrolling / section navigation in Form
-  const formNavItems = document.querySelectorAll('.form-nav-item');
-  formNavItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      formNavItems.forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
-      const targetId = item.getAttribute('href');
-      const targetEl = document.querySelector(targetId);
-      if (targetEl) {
-        targetEl.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  });
 
   // Mobile drawer toggle for form editor
   const toggleDrawerBtn = document.getElementById('toggle-editor-btn');
@@ -227,6 +213,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!formContainer) return;
 
     formContainer.innerHTML = `
+      <!-- THEME & DATE STYLING SECTION -->
+      <section id="section-theme" class="form-section ${openSections.theme ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('theme')">
+          <span class="accordion-title"><i class="fas fa-paint-brush"></i> Theme & Date Styling</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="form-grid-2">
+            <div class="form-group grid-span-2">
+              <label>Date & Location Font Style</label>
+              <select id="theme-date-font" class="select-input" data-key="theme.dateFont" style="width:100%;">
+                <option value="default" ${(resumeData.theme?.dateFont === 'default' || !resumeData.theme?.dateFont) ? 'selected' : ''}>Standard Default</option>
+                <option value="italic" ${resumeData.theme?.dateFont === 'italic' ? 'selected' : ''}>Italic Accent</option>
+                <option value="monospace" ${resumeData.theme?.dateFont === 'monospace' ? 'selected' : ''}>Monospace Tech</option>
+                <option value="serif" ${resumeData.theme?.dateFont === 'serif' ? 'selected' : ''}>Georgia Serif</option>
+                <option value="sans" ${resumeData.theme?.dateFont === 'sans' ? 'selected' : ''}>Bold Sans-Serif</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- BASICS SECTION -->
       <section id="section-basics" class="form-section ${openSections.basics ? 'open' : ''}">
         <button type="button" class="accordion-header" onclick="toggleAccordion('basics')">
@@ -365,9 +373,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSkillsItems();
     renderAwardsItems();
 
-    // Attach dynamic input listeners
-    formContainer.querySelectorAll('input, textarea').forEach(input => {
+    // Attach dynamic input/select listeners
+    formContainer.querySelectorAll('input, textarea, select').forEach(input => {
       input.addEventListener('input', handleInputChange);
+      input.addEventListener('change', handleInputChange);
     });
 
     // Dynamic buttons
@@ -768,6 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function normalizeImportedData(data) {
     return {
       selectedTemplate: data.selectedTemplate || 'modern',
+      theme: Object.assign({ dateFont: 'default' }, data.theme || {}),
       headings: Object.assign({ work: 'Experience', education: 'Education', skills: 'Skills', projects: 'Projects', awards: 'Awards' }, data.headings || {}),
       basics: Object.assign({ name: '', email: '', phone: '', location: { address: '' }, website: '', summary: '' }, data.basics || {}),
       work: Array.isArray(data.work) ? data.work : [],

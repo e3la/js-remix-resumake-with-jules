@@ -111,29 +111,6 @@ body {
   transition: transform 0.3s ease;
 }
 
-.form-nav {
-  display: flex;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--border-color);
-  background-color: rgba(0, 0, 0, 0.15);
-  padding: 0 10px;
-}
-
-.form-nav-item {
-  padding: 12px 14px;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.form-nav-item:hover, .form-nav-item.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
 
 .editor-content {
   flex: 1;
@@ -512,14 +489,17 @@ body {
 .item-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 3px;
 }
 
 .item-title-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px 10px;
+  flex: 1;
 }
 
 .item-company, .item-institution, .item-award-title {
@@ -535,9 +515,44 @@ body {
 
 .item-meta {
   font-size: 0.85rem;
-  color: #555;
+  color: #444;
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+  white-space: nowrap;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.item-location {
+  font-style: normal;
+}
+
+.item-dates {
+  font-weight: 500;
+}
+
+/* Date Font Variations */
+.date-font-italic .item-dates {
+  font-style: italic;
+}
+
+.date-font-monospace .item-dates {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  letter-spacing: -0.2px;
+}
+
+.date-font-serif .item-dates {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
+
+.date-font-sans .item-dates {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 600;
 }
 
 .item-highlights {

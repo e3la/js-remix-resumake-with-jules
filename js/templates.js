@@ -16,7 +16,10 @@ function renderResumePreview(data, container) {
     awards: 'Awards'
   };
 
-  container.className = `resume-paper resume-page template-${template}`;
+  const theme = data.theme || {};
+  const dateFont = theme.dateFont || 'default';
+
+  container.className = `resume-paper resume-page template-${template} date-font-${dateFont}`;
 
   let html = '';
 
