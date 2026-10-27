@@ -1,0 +1,628 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const STORAGE_KEY = 'resumake_data';
+
+  // Initialize state
+  let resumeData = loadData();
+
+  // Cache DOM elements
+  const previewContainer = document.getElementById('resume-preview');
+  const templateSelect = document.getElementById('template-select');
+  const latexModal = document.getElementById('latex-modal');
+  const latexCode = document.getElementById('latex-code');
+  const copyLatexBtn = document.getElementById('copy-latex-btn');
+  const downloadLatexBtn = document.getElementById('download-latex-btn');
+  const closeLatexModalBtn = document.getElementById('close-latex-modal');
+  const jsonFileInput = document.getElementById('json-file-input');
+
+  // Set initial template selector
+  if (templateSelect) {
+    templateSelect.value = resumeData.selectedTemplate || 'modern';
+  }
+
+  // Initial render
+  renderForm();
+  updatePreview();
+
+  // --- Event Listeners for Header Actions ---
+
+  // Template select change
+  if (templateSelect) {
+    templateSelect.addEventListener('change', (e) => {
+      resumeData.selectedTemplate = e.target.value;
+      saveData();
+      updatePreview();
+    });
+  }
+
+  // Load Sample Data Button
+  document.getElementById('btn-sample-data')?.addEventListener('click', () => {
+    if (confirm('Load sample data? This will overwrite your current edits.')) {
+      resumeData = JSON.parse(JSON.stringify(window.sampleResumeData));
+      if (templateSelect) templateSelect.value = resumeData.selectedTemplate;
+      saveData();
+      renderForm();
+      updatePreview();
+    }
+  });
+
+  // Clear Form Button
+  document.getElementById('btn-clear-form')?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear all data?')) {
+      resumeData = {
+        selectedTemplate: templateSelect ? templateSelect.value : 'modern',
+        headings: { work: 'Experience', education: 'Education', skills: 'Skills', projects: 'Projects', awards: 'Awards' },
+        basics: { name: '', email: '', phone: '', location: { address: '' }, website: '', summary: '' },
+        work: [],
+        education: [],
+        skills: [],
+        projects: [],
+        awards: []
+      };
+      saveData();
+      renderForm();
+      updatePreview();
+    }
+  });
+
+  // Export JSON
+  document.getElementById('btn-export-json')?.addEventListener('click', () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${(resumeData.basics?.name || 'resume').toLowerCase().replace(/\s+/g, '_')}_resume.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  });
+
+  // Import JSON
+  document.getElementById('btn-import-json')?.addEventListener('click', () => {
+    jsonFileInput.click();
+  });
+
+  jsonFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        resumeData = normalizeImportedData(imported);
+        if (templateSelect) templateSelect.value = resumeData.selectedTemplate || 'modern';
+        saveData();
+        renderForm();
+        updatePreview();
+        alert('Resume data imported successfully!');
+      } catch (err) {
+        alert('Invalid JSON file format.');
+      }
+    };
+    reader.readAsText(file);
+    jsonFileInput.value = '';
+  });
+
+  // View LaTeX Code
+  document.getElementById('btn-view-latex')?.addEventListener('click', () => {
+    const tex = window.generateLatex(resumeData);
+    latexCode.value = tex;
+    latexModal.classList.add('active');
+  });
+
+  closeLatexModalBtn?.addEventListener('click', () => {
+    latexModal.classList.remove('active');
+  });
+
+  latexModal?.addEventListener('click', (e) => {
+    if (e.target === latexModal) {
+      latexModal.classList.remove('active');
+    }
+  });
+
+  copyLatexBtn?.addEventListener('click', () => {
+    latexCode.select();
+    navigator.clipboard.writeText(latexCode.value);
+    copyLatexBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => {
+      copyLatexBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+    }, 2000);
+  });
+
+  downloadLatexBtn?.addEventListener('click', () => {
+    const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(latexCode.value);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${(resumeData.basics?.name || 'resume').toLowerCase().replace(/\s+/g, '_')}.tex`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  });
+
+  // Download PDF / Print
+  document.getElementById('btn-download-pdf')?.addEventListener('click', () => {
+    // If html2pdf is loaded, use html2pdf for direct download, else window.print()
+    if (window.html2pdf) {
+      const element = document.getElementById('resume-preview');
+      const filename = `${(resumeData.basics?.name || 'resume').toLowerCase().replace(/\s+/g, '_')}_resume.pdf`;
+      const opt = {
+        margin:       0,
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    } else {
+      window.print();
+    }
+  });
+
+  // Navigation tab scrolling / section navigation in Form
+  const formNavItems = document.querySelectorAll('.form-nav-item');
+  formNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      formNavItems.forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      const targetId = item.getAttribute('href');
+      const targetEl = document.querySelector(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Mobile drawer toggle for form editor
+  const toggleDrawerBtn = document.getElementById('toggle-editor-btn');
+  const sidebar = document.querySelector('.editor-sidebar');
+  if (toggleDrawerBtn && sidebar) {
+    toggleDrawerBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+  }
+
+  // --- Core State & Form Functions ---
+
+  function loadData() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load from localStorage', e);
+    }
+    // Fallback to sample resume data
+    return JSON.parse(JSON.stringify(window.sampleResumeData));
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+    } catch (e) {
+      console.error('Failed to save to localStorage', e);
+    }
+  }
+
+  function updatePreview() {
+    window.renderResumePreview(resumeData, previewContainer);
+  }
+
+  function renderForm() {
+    const formContainer = document.getElementById('editor-form-container');
+    if (!formContainer) return;
+
+    formContainer.innerHTML = `
+      <!-- BASICS SECTION -->
+      <section id="section-basics" class="form-section">
+        <h3 class="section-heading"><i class="fas fa-user"></i> Personal Information</h3>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" data-key="basics.name" value="${escapeAttr(resumeData.basics?.name)}" placeholder="Jane Doe">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" data-key="basics.email" value="${escapeAttr(resumeData.basics?.email)}" placeholder="jane@example.com">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" data-key="basics.phone" value="${escapeAttr(resumeData.basics?.phone)}" placeholder="(555) 000-0000">
+          </div>
+          <div class="form-group">
+            <label>Location / City, State</label>
+            <input type="text" data-key="basics.location.address" value="${escapeAttr(resumeData.basics?.location?.address)}" placeholder="San Francisco, CA">
+          </div>
+          <div class="form-group grid-span-2">
+            <label>Website / Portfolio URL</label>
+            <input type="url" data-key="basics.website" value="${escapeAttr(resumeData.basics?.website)}" placeholder="https://janedoe.dev">
+          </div>
+          <div class="form-group grid-span-2">
+            <label>Summary / Professional Profile</label>
+            <textarea data-key="basics.summary" rows="3" placeholder="Brief statement summarizing your experience and goals...">${escapeHtmlText(resumeData.basics?.summary)}</textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- WORK EXPERIENCE SECTION -->
+      <section id="section-work" class="form-section">
+        <div class="section-header-flex">
+          <h3 class="section-heading"><i class="fas fa-briefcase"></i> Work Experience</h3>
+          <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
+        </div>
+        <div id="work-items-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-work-btn"><i class="fas fa-plus"></i> Add Work Experience</button>
+      </section>
+
+      <!-- EDUCATION SECTION -->
+      <section id="section-education" class="form-section">
+        <div class="section-header-flex">
+          <h3 class="section-heading"><i class="fas fa-graduation-cap"></i> Education</h3>
+          <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
+        </div>
+        <div id="education-items-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-education-btn"><i class="fas fa-plus"></i> Add Education</button>
+      </section>
+
+      <!-- PROJECTS SECTION -->
+      <section id="section-projects" class="form-section">
+        <div class="section-header-flex">
+          <h3 class="section-heading"><i class="fas fa-code-branch"></i> Projects</h3>
+          <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
+        </div>
+        <div id="projects-items-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-projects-btn"><i class="fas fa-plus"></i> Add Project</button>
+      </section>
+
+      <!-- SKILLS SECTION -->
+      <section id="section-skills" class="form-section">
+        <div class="section-header-flex">
+          <h3 class="section-heading"><i class="fas fa-tools"></i> Skills</h3>
+          <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
+        </div>
+        <div id="skills-items-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-skills-btn"><i class="fas fa-plus"></i> Add Skill Group</button>
+      </section>
+
+      <!-- AWARDS SECTION -->
+      <section id="section-awards" class="form-section">
+        <div class="section-header-flex">
+          <h3 class="section-heading"><i class="fas fa-trophy"></i> Awards & Certifications</h3>
+          <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
+        </div>
+        <div id="awards-items-container"></div>
+        <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-awards-btn"><i class="fas fa-plus"></i> Add Award</button>
+      </section>
+    `;
+
+    renderWorkItems();
+    renderEducationItems();
+    renderProjectsItems();
+    renderSkillsItems();
+    renderAwardsItems();
+
+    // Attach dynamic input listeners
+    formContainer.querySelectorAll('input, textarea').forEach(input => {
+      input.addEventListener('input', handleInputChange);
+    });
+
+    // Dynamic buttons
+    document.getElementById('add-work-btn')?.addEventListener('click', () => {
+      resumeData.work.push({ company: '', position: '', location: '', startDate: '', endDate: '', highlights: [''] });
+      saveData();
+      renderWorkItems();
+      updatePreview();
+    });
+
+    document.getElementById('add-education-btn')?.addEventListener('click', () => {
+      resumeData.education.push({ institution: '', area: '', studyType: '', location: '', startDate: '', endDate: '', score: '' });
+      saveData();
+      renderEducationItems();
+      updatePreview();
+    });
+
+    document.getElementById('add-projects-btn')?.addEventListener('click', () => {
+      resumeData.projects.push({ name: '', description: '', url: '', keywords: [] });
+      saveData();
+      renderProjectsItems();
+      updatePreview();
+    });
+
+    document.getElementById('add-skills-btn')?.addEventListener('click', () => {
+      resumeData.skills.push({ name: '', keywords: [] });
+      saveData();
+      renderSkillsItems();
+      updatePreview();
+    });
+
+    document.getElementById('add-awards-btn')?.addEventListener('click', () => {
+      resumeData.awards.push({ title: '', awarder: '', date: '', summary: '' });
+      saveData();
+      renderAwardsItems();
+      updatePreview();
+    });
+  }
+
+  function handleInputChange(e) {
+    const key = e.target.getAttribute('data-key');
+    if (!key) return;
+    setNestedValue(resumeData, key, e.target.value);
+    saveData();
+    updatePreview();
+  }
+
+  // Render Sub-Sections
+  function renderWorkItems() {
+    const container = document.getElementById('work-items-container');
+    if (!container) return;
+    container.innerHTML = (resumeData.work || []).map((job, idx) => `
+      <div class="dynamic-card">
+        <div class="card-header">
+          <span class="card-title">${escapeHtmlText(job.company || `Job #${idx + 1}`)}</span>
+          <button type="button" class="btn-icon danger" onclick="removeWorkItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Company / Organization</label>
+            <input type="text" data-key="work.${idx}.company" value="${escapeAttr(job.company)}" placeholder="Acme Inc.">
+          </div>
+          <div class="form-group">
+            <label>Position / Role Title</label>
+            <input type="text" data-key="work.${idx}.position" value="${escapeAttr(job.position)}" placeholder="Software Engineer">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" data-key="work.${idx}.location" value="${escapeAttr(job.location)}" placeholder="City, State">
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="text" data-key="work.${idx}.startDate" value="${escapeAttr(job.startDate)}" placeholder="2020">
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="text" data-key="work.${idx}.endDate" value="${escapeAttr(job.endDate)}" placeholder="Present">
+            </div>
+          </div>
+          <div class="form-group grid-span-2">
+            <label>Highlights / Responsibilities (One per line)</label>
+            <textarea data-key="work.${idx}.highlights" rows="3" placeholder="Key achievement 1&#10;Key achievement 2" oninput="handleWorkHighlightsChange(event, ${idx})">${escapeHtmlText((job.highlights || []).join('\n'))}</textarea>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input').forEach(input => input.addEventListener('input', handleInputChange));
+  }
+
+  function renderEducationItems() {
+    const container = document.getElementById('education-items-container');
+    if (!container) return;
+    container.innerHTML = (resumeData.education || []).map((edu, idx) => `
+      <div class="dynamic-card">
+        <div class="card-header">
+          <span class="card-title">${escapeHtmlText(edu.institution || `School #${idx + 1}`)}</span>
+          <button type="button" class="btn-icon danger" onclick="removeEducationItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group grid-span-2">
+            <label>Institution / School Name</label>
+            <input type="text" data-key="education.${idx}.institution" value="${escapeAttr(edu.institution)}" placeholder="UC Berkeley">
+          </div>
+          <div class="form-group">
+            <label>Degree Type</label>
+            <input type="text" data-key="education.${idx}.studyType" value="${escapeAttr(edu.studyType)}" placeholder="B.S.">
+          </div>
+          <div class="form-group">
+            <label>Field of Study / Area</label>
+            <input type="text" data-key="education.${idx}.area" value="${escapeAttr(edu.area)}" placeholder="Computer Science">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" data-key="education.${idx}.location" value="${escapeAttr(edu.location)}" placeholder="Berkeley, CA">
+          </div>
+          <div class="form-group">
+            <label>GPA / Score (Optional)</label>
+            <input type="text" data-key="education.${idx}.score" value="${escapeAttr(edu.score)}" placeholder="3.8 / 4.0">
+          </div>
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="text" data-key="education.${idx}.startDate" value="${escapeAttr(edu.startDate)}" placeholder="2016">
+          </div>
+          <div class="form-group">
+            <label>End Date / Grad Year</label>
+            <input type="text" data-key="education.${idx}.endDate" value="${escapeAttr(edu.endDate)}" placeholder="2020">
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input').forEach(input => input.addEventListener('input', handleInputChange));
+  }
+
+  function renderProjectsItems() {
+    const container = document.getElementById('projects-items-container');
+    if (!container) return;
+    container.innerHTML = (resumeData.projects || []).map((proj, idx) => `
+      <div class="dynamic-card">
+        <div class="card-header">
+          <span class="card-title">${escapeHtmlText(proj.name || `Project #${idx + 1}`)}</span>
+          <button type="button" class="btn-icon danger" onclick="removeProjectItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" data-key="projects.${idx}.name" value="${escapeAttr(proj.name)}" placeholder="My Cool App">
+          </div>
+          <div class="form-group">
+            <label>Project URL</label>
+            <input type="text" data-key="projects.${idx}.url" value="${escapeAttr(proj.url)}" placeholder="https://github.com/...">
+          </div>
+          <div class="form-group grid-span-2">
+            <label>Technologies / Keywords (Comma separated)</label>
+            <input type="text" value="${escapeAttr((proj.keywords || []).join(', '))}" placeholder="React, Node.js, MongoDB" oninput="handleKeywordsChange(event, 'projects', ${idx})">
+          </div>
+          <div class="form-group grid-span-2">
+            <label>Project Description</label>
+            <textarea data-key="projects.${idx}.description" rows="2" placeholder="Brief overview of what you built and achieved...">${escapeHtmlText(proj.description)}</textarea>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input, textarea').forEach(input => {
+      if (input.getAttribute('data-key')) input.addEventListener('input', handleInputChange);
+    });
+  }
+
+  function renderSkillsItems() {
+    const container = document.getElementById('skills-items-container');
+    if (!container) return;
+    container.innerHTML = (resumeData.skills || []).map((skill, idx) => `
+      <div class="dynamic-card">
+        <div class="card-header">
+          <span class="card-title">${escapeHtmlText(skill.name || `Skill Group #${idx + 1}`)}</span>
+          <button type="button" class="btn-icon danger" onclick="removeSkillItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Category Name</label>
+            <input type="text" data-key="skills.${idx}.name" value="${escapeAttr(skill.name)}" placeholder="e.g. Languages / Frameworks">
+          </div>
+          <div class="form-group">
+            <label>Skills / Keywords (Comma separated)</label>
+            <input type="text" value="${escapeAttr((skill.keywords || []).join(', '))}" placeholder="JavaScript, Python, Go" oninput="handleKeywordsChange(event, 'skills', ${idx})">
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input').forEach(input => {
+      if (input.getAttribute('data-key')) input.addEventListener('input', handleInputChange);
+    });
+  }
+
+  function renderAwardsItems() {
+    const container = document.getElementById('awards-items-container');
+    if (!container) return;
+    container.innerHTML = (resumeData.awards || []).map((award, idx) => `
+      <div class="dynamic-card">
+        <div class="card-header">
+          <span class="card-title">${escapeHtmlText(award.title || `Award #${idx + 1}`)}</span>
+          <button type="button" class="btn-icon danger" onclick="removeAwardItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Award / Certification Title</label>
+            <input type="text" data-key="awards.${idx}.title" value="${escapeAttr(award.title)}" placeholder="1st Place Winner">
+          </div>
+          <div class="form-group">
+            <label>Issuer / Organization</label>
+            <input type="text" data-key="awards.${idx}.awarder" value="${escapeAttr(award.awarder)}" placeholder="Global Hackathon">
+          </div>
+          <div class="form-group">
+            <label>Date Received</label>
+            <input type="text" data-key="awards.${idx}.date" value="${escapeAttr(award.date)}" placeholder="2022">
+          </div>
+          <div class="form-group">
+            <label>Summary / Details</label>
+            <input type="text" data-key="awards.${idx}.summary" value="${escapeAttr(award.summary)}" placeholder="Awarded for...">
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input').forEach(input => input.addEventListener('input', handleInputChange));
+  }
+
+  // --- Global Window Helpers for Dynamic Delete/Key handlers ---
+  window.removeWorkItem = (idx) => {
+    resumeData.work.splice(idx, 1);
+    saveData();
+    renderWorkItems();
+    updatePreview();
+  };
+
+  window.removeEducationItem = (idx) => {
+    resumeData.education.splice(idx, 1);
+    saveData();
+    renderEducationItems();
+    updatePreview();
+  };
+
+  window.removeProjectItem = (idx) => {
+    resumeData.projects.splice(idx, 1);
+    saveData();
+    renderProjectsItems();
+    updatePreview();
+  };
+
+  window.removeSkillItem = (idx) => {
+    resumeData.skills.splice(idx, 1);
+    saveData();
+    renderSkillsItems();
+    updatePreview();
+  };
+
+  window.removeAwardItem = (idx) => {
+    resumeData.awards.splice(idx, 1);
+    saveData();
+    renderAwardsItems();
+    updatePreview();
+  };
+
+  window.handleWorkHighlightsChange = (e, idx) => {
+    const lines = e.target.value.split('\n');
+    if (!resumeData.work[idx]) return;
+    resumeData.work[idx].highlights = lines;
+    saveData();
+    updatePreview();
+  };
+
+  window.handleKeywordsChange = (e, section, idx) => {
+    const keywords = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+    if (!resumeData[section][idx]) return;
+    resumeData[section][idx].keywords = keywords;
+    saveData();
+    updatePreview();
+  };
+
+  // --- Utility Helpers ---
+  function setNestedValue(obj, path, value) {
+    const keys = path.split('.');
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (!current[k]) {
+        current[k] = isNaN(keys[i + 1]) ? {} : [];
+      }
+      current = current[k];
+    }
+    current[keys[keys.length - 1]] = value;
+  }
+
+  function escapeAttr(val) {
+    if (val === null || val === undefined) return '';
+    return String(val).replace(/"/g, '&quot;');
+  }
+
+  function escapeHtmlText(val) {
+    if (val === null || val === undefined) return '';
+    return String(val)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function normalizeImportedData(data) {
+    return {
+      selectedTemplate: data.selectedTemplate || 'modern',
+      headings: Object.assign({ work: 'Experience', education: 'Education', skills: 'Skills', projects: 'Projects', awards: 'Awards' }, data.headings || {}),
+      basics: Object.assign({ name: '', email: '', phone: '', location: { address: '' }, website: '', summary: '' }, data.basics || {}),
+      work: Array.isArray(data.work) ? data.work : [],
+      education: Array.isArray(data.education) ? data.education : [],
+      skills: Array.isArray(data.skills) ? data.skills : [],
+      projects: Array.isArray(data.projects) ? data.projects : [],
+      awards: Array.isArray(data.awards) ? data.awards : []
+    };
+  }
+});
