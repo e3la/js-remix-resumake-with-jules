@@ -34,6 +34,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Regenerate Preview Button
+  document.getElementById('btn-regenerate')?.addEventListener('click', () => {
+    saveData();
+    renderForm();
+    updatePreview();
+    const icon = document.querySelector('#btn-regenerate i');
+    if (icon) {
+      icon.classList.add('fa-spin');
+      setTimeout(() => icon.classList.remove('fa-spin'), 500);
+    }
+  });
+
   // Load Sample Data Button
   document.getElementById('btn-sample-data')?.addEventListener('click', () => {
     if (confirm('Load sample data? This will overwrite your current edits.')) {
@@ -247,7 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <section id="section-work" class="form-section">
         <div class="section-header-flex">
           <h3 class="section-heading"><i class="fas fa-briefcase"></i> Work Experience</h3>
-          <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-icon danger" onclick="clearSection('work')" title="Clear entire Work section"><i class="fas fa-trash"></i></button>
+            <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
+          </div>
         </div>
         <div id="work-items-container"></div>
         <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-work-btn"><i class="fas fa-plus"></i> Add Work Experience</button>
@@ -257,7 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <section id="section-education" class="form-section">
         <div class="section-header-flex">
           <h3 class="section-heading"><i class="fas fa-graduation-cap"></i> Education</h3>
-          <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-icon danger" onclick="clearSection('education')" title="Clear entire Education section"><i class="fas fa-trash"></i></button>
+            <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
+          </div>
         </div>
         <div id="education-items-container"></div>
         <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-education-btn"><i class="fas fa-plus"></i> Add Education</button>
@@ -267,7 +285,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <section id="section-projects" class="form-section">
         <div class="section-header-flex">
           <h3 class="section-heading"><i class="fas fa-code-branch"></i> Projects</h3>
-          <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-icon danger" onclick="clearSection('projects')" title="Clear entire Projects section"><i class="fas fa-trash"></i></button>
+            <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
+          </div>
         </div>
         <div id="projects-items-container"></div>
         <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-projects-btn"><i class="fas fa-plus"></i> Add Project</button>
@@ -277,7 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <section id="section-skills" class="form-section">
         <div class="section-header-flex">
           <h3 class="section-heading"><i class="fas fa-tools"></i> Skills</h3>
-          <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-icon danger" onclick="clearSection('skills')" title="Clear entire Skills section"><i class="fas fa-trash"></i></button>
+            <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
+          </div>
         </div>
         <div id="skills-items-container"></div>
         <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-skills-btn"><i class="fas fa-plus"></i> Add Skill Group</button>
@@ -287,7 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <section id="section-awards" class="form-section">
         <div class="section-header-flex">
           <h3 class="section-heading"><i class="fas fa-trophy"></i> Awards & Certifications</h3>
-          <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button type="button" class="btn-icon danger" onclick="clearSection('awards')" title="Clear entire Awards section"><i class="fas fa-trash"></i></button>
+            <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
+          </div>
         </div>
         <div id="awards-items-container"></div>
         <button type="button" class="btn btn-secondary btn-sm btn-block" id="add-awards-btn"><i class="fas fa-plus"></i> Add Award</button>
@@ -535,6 +562,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Global Window Helpers for Dynamic Delete/Key handlers ---
+  window.clearSection = (sectionName) => {
+    if (confirm(`Are you sure you want to clear all items in ${sectionName}?`)) {
+      resumeData[sectionName] = [];
+      saveData();
+      renderForm();
+      updatePreview();
+    }
+  };
+
   window.removeWorkItem = (idx) => {
     resumeData.work.splice(idx, 1);
     saveData();
