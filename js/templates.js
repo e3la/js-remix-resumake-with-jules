@@ -18,8 +18,20 @@ function renderResumePreview(data, container) {
 
   const theme = data.theme || {};
   const dateFont = theme.dateFont || 'default';
+  const pageBreaks = data.pageBreaks || {};
+  const printSetup = data.printSetup || {};
+  const marginClass = `margin-${printSetup.margins || 'normal'}`;
+  const spacingClass = `spacing-${printSetup.spacing || 'normal'}`;
 
-  container.className = `resume-paper resume-page template-${template} date-font-${dateFont}`;
+  container.className = `resume-paper resume-page template-${template} date-font-${dateFont} ${marginClass} ${spacingClass}`;
+
+  if (printSetup.scale && printSetup.scale !== 100) {
+    container.style.transform = `scale(${printSetup.scale / 100})`;
+    container.style.transformOrigin = 'top center';
+  } else {
+    container.style.transform = '';
+    container.style.transformOrigin = '';
+  }
 
   let html = '';
 
@@ -58,16 +70,18 @@ function renderResumePreview(data, container) {
 
   // 3. Experience
   if (work && work.length > 0 && work.some(w => w.company || w.position)) {
+    const sectionBreak = pageBreaks['section-work'] ? ' page-break-before' : '';
     html += `
-      <section class="resume-section">
+      <section class="resume-section${sectionBreak}">
         <h2 class="section-title">${escapeHtml(headings.work || 'Experience')}</h2>
         <div class="section-content">
     `;
-    work.forEach(job => {
+    work.forEach((job, idx) => {
       if (!job.company && !job.position) return;
       const dates = [job.startDate, job.endDate].filter(Boolean).join(' – ');
+      const itemBreak = pageBreaks[`work-${idx}`] ? ' page-break-before' : '';
       html += `
-        <div class="resume-item">
+        <div class="resume-item${itemBreak}">
           <div class="item-header">
             <div class="item-title-group">
               <span class="item-company">${escapeHtml(job.company || job.name || '')}</span>
@@ -95,17 +109,19 @@ function renderResumePreview(data, container) {
 
   // 4. Education
   if (education && education.length > 0 && education.some(e => e.institution || e.area)) {
+    const sectionBreak = pageBreaks['section-education'] ? ' page-break-before' : '';
     html += `
-      <section class="resume-section">
+      <section class="resume-section${sectionBreak}">
         <h2 class="section-title">${escapeHtml(headings.education || 'Education')}</h2>
         <div class="section-content">
     `;
-    education.forEach(edu => {
+    education.forEach((edu, idx) => {
       if (!edu.institution && !edu.area) return;
       const dates = [edu.startDate, edu.endDate].filter(Boolean).join(' – ');
       const degreeText = [edu.studyType, edu.area].filter(Boolean).join(' in ');
+      const itemBreak = pageBreaks[`education-${idx}`] ? ' page-break-before' : '';
       html += `
-        <div class="resume-item">
+        <div class="resume-item${itemBreak}">
           <div class="item-header">
             <div class="item-title-group">
               <span class="item-institution">${escapeHtml(edu.institution || '')}</span>
@@ -124,15 +140,17 @@ function renderResumePreview(data, container) {
 
   // 5. Projects
   if (projects && projects.length > 0 && projects.some(p => p.name || p.description)) {
+    const sectionBreak = pageBreaks['section-projects'] ? ' page-break-before' : '';
     html += `
-      <section class="resume-section">
+      <section class="resume-section${sectionBreak}">
         <h2 class="section-title">${escapeHtml(headings.projects || 'Projects')}</h2>
         <div class="section-content">
     `;
-    projects.forEach(proj => {
+    projects.forEach((proj, idx) => {
       if (!proj.name && !proj.description) return;
+      const itemBreak = pageBreaks[`projects-${idx}`] ? ' page-break-before' : '';
       html += `
-        <div class="resume-item">
+        <div class="resume-item${itemBreak}">
           <div class="item-header">
             <div class="item-title-group">
               <span class="item-project-name">${escapeHtml(proj.name || '')}</span>
@@ -149,15 +167,17 @@ function renderResumePreview(data, container) {
 
   // 6. Skills
   if (skills && skills.length > 0 && skills.some(s => s.name || (s.keywords && s.keywords.length))) {
+    const sectionBreak = pageBreaks['section-skills'] ? ' page-break-before' : '';
     html += `
-      <section class="resume-section">
+      <section class="resume-section${sectionBreak}">
         <h2 class="section-title">${escapeHtml(headings.skills || 'Skills')}</h2>
         <div class="skills-grid">
     `;
-    skills.forEach(skill => {
+    skills.forEach((skill, idx) => {
       if (!skill.name && (!skill.keywords || skill.keywords.length === 0)) return;
+      const itemBreak = pageBreaks[`skills-${idx}`] ? ' page-break-before' : '';
       html += `
-        <div class="skill-row">
+        <div class="skill-row${itemBreak}">
           <span class="skill-category">${escapeHtml(skill.name || 'Misc')}:</span>
           <span class="skill-list">${escapeHtml((skill.keywords || []).join(', '))}</span>
         </div>
@@ -168,15 +188,17 @@ function renderResumePreview(data, container) {
 
   // 7. Awards
   if (awards && awards.length > 0 && awards.some(a => a.title)) {
+    const sectionBreak = pageBreaks['section-awards'] ? ' page-break-before' : '';
     html += `
-      <section class="resume-section">
+      <section class="resume-section${sectionBreak}">
         <h2 class="section-title">${escapeHtml(headings.awards || 'Awards')}</h2>
         <div class="section-content">
     `;
-    awards.forEach(award => {
+    awards.forEach((award, idx) => {
       if (!award.title) return;
+      const itemBreak = pageBreaks[`awards-${idx}`] ? ' page-break-before' : '';
       html += `
-        <div class="resume-item">
+        <div class="resume-item${itemBreak}">
           <div class="item-header">
             <div class="item-title-group">
               <span class="item-award-title">${escapeHtml(award.title)}</span>
