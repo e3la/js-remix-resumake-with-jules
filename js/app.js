@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Accordion section open state
-  const openSections = { theme: false, basics: true, work: false, education: false, projects: false, skills: false, awards: false };
+  const openSections = { theme: false, printSetup: false, basics: true, work: false, education: false, projects: false, skills: false, awards: false };
 
   // Initial render
   renderForm();
@@ -235,6 +235,43 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </section>
 
+      <!-- PRINT & PAGE FIT SETUP SECTION -->
+      <section id="section-print-setup" class="form-section ${openSections.printSetup ? 'open' : ''}">
+        <button type="button" class="accordion-header" onclick="toggleAccordion('printSetup')">
+          <span class="accordion-title"><i class="fas fa-compress-alt"></i> Page Fit & Print Setup</span>
+          <i class="fas fa-chevron-down accordion-icon"></i>
+        </button>
+        <div class="accordion-body">
+          <div style="margin-bottom: 12px;">
+            <button type="button" class="btn btn-primary btn-sm btn-block" id="btn-auto-fit">
+              <i class="fas fa-magic"></i> Auto-Fit Resume to 1 Page
+            </button>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Page Scale: <span id="scale-val-label">${resumeData.printSetup?.scale || 100}%</span></label>
+              <input type="range" min="60" max="100" step="1" id="print-scale-input" value="${resumeData.printSetup?.scale || 100}">
+            </div>
+            <div class="form-group">
+              <label>Margin Padding</label>
+              <select id="print-margin-select" class="select-input">
+                <option value="normal" ${(resumeData.printSetup?.margins === 'normal' || !resumeData.printSetup?.margins) ? 'selected' : ''}>Normal (0.6in / 0.75in)</option>
+                <option value="compact" ${resumeData.printSetup?.margins === 'compact' ? 'selected' : ''}>Compact (0.4in / 0.5in)</option>
+                <option value="relaxed" ${resumeData.printSetup?.margins === 'relaxed' ? 'selected' : ''}>Relaxed (0.8in / 1.0in)</option>
+              </select>
+            </div>
+            <div class="form-group grid-span-2">
+              <label>Section Spacing</label>
+              <select id="print-spacing-select" class="select-input">
+                <option value="normal" ${(resumeData.printSetup?.spacing === 'normal' || !resumeData.printSetup?.spacing) ? 'selected' : ''}>Normal Spacing</option>
+                <option value="tight" ${resumeData.printSetup?.spacing === 'tight' ? 'selected' : ''}>Tight Spacing</option>
+                <option value="spacious" ${resumeData.printSetup?.spacing === 'spacious' ? 'selected' : ''}>Spacious</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- BASICS SECTION -->
       <section id="section-basics" class="form-section ${openSections.basics ? 'open' : ''}">
         <button type="button" class="accordion-header" onclick="toggleAccordion('basics')">
@@ -279,7 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="accordion-body">
           <div class="section-header-flex">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('section-work', this.checked)" ${resumeData.pageBreaks?.['section-work'] ? 'checked' : ''}>
+              Page Break Before Section
+            </label>
             <div style="display:flex; gap:6px; align-items:center;">
               <button type="button" class="btn-icon danger" onclick="clearSection('work')" title="Clear entire Work section"><i class="fas fa-trash"></i></button>
               <input type="text" class="heading-input" data-key="headings.work" value="${escapeAttr(resumeData.headings?.work || 'Experience')}" placeholder="Section Title">
@@ -298,7 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="accordion-body">
           <div class="section-header-flex">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('section-education', this.checked)" ${resumeData.pageBreaks?.['section-education'] ? 'checked' : ''}>
+              Page Break Before Section
+            </label>
             <div style="display:flex; gap:6px; align-items:center;">
               <button type="button" class="btn-icon danger" onclick="clearSection('education')" title="Clear entire Education section"><i class="fas fa-trash"></i></button>
               <input type="text" class="heading-input" data-key="headings.education" value="${escapeAttr(resumeData.headings?.education || 'Education')}" placeholder="Section Title">
@@ -317,7 +360,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="accordion-body">
           <div class="section-header-flex">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('section-projects', this.checked)" ${resumeData.pageBreaks?.['section-projects'] ? 'checked' : ''}>
+              Page Break Before Section
+            </label>
             <div style="display:flex; gap:6px; align-items:center;">
               <button type="button" class="btn-icon danger" onclick="clearSection('projects')" title="Clear entire Projects section"><i class="fas fa-trash"></i></button>
               <input type="text" class="heading-input" data-key="headings.projects" value="${escapeAttr(resumeData.headings?.projects || 'Projects')}" placeholder="Section Title">
@@ -336,7 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="accordion-body">
           <div class="section-header-flex">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('section-skills', this.checked)" ${resumeData.pageBreaks?.['section-skills'] ? 'checked' : ''}>
+              Page Break Before Section
+            </label>
             <div style="display:flex; gap:6px; align-items:center;">
               <button type="button" class="btn-icon danger" onclick="clearSection('skills')" title="Clear entire Skills section"><i class="fas fa-trash"></i></button>
               <input type="text" class="heading-input" data-key="headings.skills" value="${escapeAttr(resumeData.headings?.skills || 'Skills')}" placeholder="Section Title">
@@ -355,7 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
         <div class="accordion-body">
           <div class="section-header-flex">
-            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:500;">Header Label:</span>
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('section-awards', this.checked)" ${resumeData.pageBreaks?.['section-awards'] ? 'checked' : ''}>
+              Page Break Before Section
+            </label>
             <div style="display:flex; gap:6px; align-items:center;">
               <button type="button" class="btn-icon danger" onclick="clearSection('awards')" title="Clear entire Awards section"><i class="fas fa-trash"></i></button>
               <input type="text" class="heading-input" data-key="headings.awards" value="${escapeAttr(resumeData.headings?.awards || 'Awards')}" placeholder="Section Title">
@@ -375,9 +427,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach dynamic input/select listeners
     formContainer.querySelectorAll('input, textarea, select').forEach(input => {
-      input.addEventListener('input', handleInputChange);
-      input.addEventListener('change', handleInputChange);
+      if (!input.id || (!input.id.startsWith('print-') && input.id !== 'btn-auto-fit')) {
+        input.addEventListener('input', handleInputChange);
+        input.addEventListener('change', handleInputChange);
+      }
     });
+
+    // Page Fit / Print setup listeners
+    const scaleInput = document.getElementById('print-scale-input');
+    const marginSelect = document.getElementById('print-margin-select');
+    const spacingSelect = document.getElementById('print-spacing-select');
+    const autoFitBtn = document.getElementById('btn-auto-fit');
+
+    if (scaleInput) {
+      scaleInput.addEventListener('input', (e) => {
+        if (!resumeData.printSetup) resumeData.printSetup = {};
+        resumeData.printSetup.scale = parseInt(e.target.value, 10);
+        document.getElementById('scale-val-label').textContent = `${resumeData.printSetup.scale}%`;
+        saveData();
+        updatePreview();
+      });
+    }
+
+    if (marginSelect) {
+      marginSelect.addEventListener('change', (e) => {
+        if (!resumeData.printSetup) resumeData.printSetup = {};
+        resumeData.printSetup.margins = e.target.value;
+        saveData();
+        updatePreview();
+      });
+    }
+
+    if (spacingSelect) {
+      spacingSelect.addEventListener('change', (e) => {
+        if (!resumeData.printSetup) resumeData.printSetup = {};
+        resumeData.printSetup.spacing = e.target.value;
+        saveData();
+        updatePreview();
+      });
+    }
+
+    if (autoFitBtn) {
+      autoFitBtn.addEventListener('click', autoFitToSinglePage);
+    }
 
     // Dynamic buttons
     document.getElementById('add-work-btn')?.addEventListener('click', () => {
@@ -432,7 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="dynamic-card">
         <div class="card-header">
           <span class="card-title">${escapeHtmlText(job.company || `Job #${idx + 1}`)}</span>
-          <button type="button" class="btn-icon danger" onclick="removeWorkItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('work-${idx}', this.checked)" ${resumeData.pageBreaks?.[`work-${idx}`] ? 'checked' : ''}> Break
+            </label>
+            <button type="button" class="btn-icon danger" onclick="removeWorkItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>
         <div class="form-grid-2">
           <div class="form-group">
@@ -475,7 +572,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="dynamic-card">
         <div class="card-header">
           <span class="card-title">${escapeHtmlText(edu.institution || `School #${idx + 1}`)}</span>
-          <button type="button" class="btn-icon danger" onclick="removeEducationItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('education-${idx}', this.checked)" ${resumeData.pageBreaks?.[`education-${idx}`] ? 'checked' : ''}> Break
+            </label>
+            <button type="button" class="btn-icon danger" onclick="removeEducationItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>
         <div class="form-grid-2">
           <div class="form-group grid-span-2">
@@ -520,7 +622,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="dynamic-card">
         <div class="card-header">
           <span class="card-title">${escapeHtmlText(proj.name || `Project #${idx + 1}`)}</span>
-          <button type="button" class="btn-icon danger" onclick="removeProjectItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('projects-${idx}', this.checked)" ${resumeData.pageBreaks?.[`projects-${idx}`] ? 'checked' : ''}> Break
+            </label>
+            <button type="button" class="btn-icon danger" onclick="removeProjectItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>
         <div class="form-grid-2">
           <div class="form-group">
@@ -555,7 +662,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="dynamic-card">
         <div class="card-header">
           <span class="card-title">${escapeHtmlText(skill.name || `Skill Group #${idx + 1}`)}</span>
-          <button type="button" class="btn-icon danger" onclick="removeSkillItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('skills-${idx}', this.checked)" ${resumeData.pageBreaks?.[`skills-${idx}`] ? 'checked' : ''}> Break
+            </label>
+            <button type="button" class="btn-icon danger" onclick="removeSkillItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>
         <div class="form-grid-2">
           <div class="form-group">
@@ -582,7 +694,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="dynamic-card">
         <div class="card-header">
           <span class="card-title">${escapeHtmlText(award.title || `Award #${idx + 1}`)}</span>
-          <button type="button" class="btn-icon danger" onclick="removeAwardItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label class="page-break-toggle">
+              <input type="checkbox" onchange="togglePageBreak('awards-${idx}', this.checked)" ${resumeData.pageBreaks?.[`awards-${idx}`] ? 'checked' : ''}> Break
+            </label>
+            <button type="button" class="btn-icon danger" onclick="removeAwardItem(${idx})"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>
         <div class="form-grid-2">
           <div class="form-group">
@@ -627,7 +744,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const previewHTML = document.getElementById('resume-preview').innerHTML;
+    const printSetup = resumeData.printSetup || {};
     const templateClass = `template-${resumeData.selectedTemplate || 'modern'}`;
+    const dateFontClass = `date-font-${resumeData.theme?.dateFont || 'default'}`;
+    const marginClass = `margin-${printSetup.margins || 'normal'}`;
+    const spacingClass = `spacing-${printSetup.spacing || 'normal'}`;
+    const scaleFactor = (printSetup.scale || 100) / 100;
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -651,10 +773,11 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #fff;
             color: #111;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            padding: 0.6in 0.75in;
             width: 8.5in;
             min-height: 11in;
             box-sizing: border-box;
+            transform: scale(${scaleFactor});
+            transform-origin: top center;
           }
           @media print {
             body {
@@ -664,14 +787,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             .standalone-wrapper {
               box-shadow: none;
-              padding: 0;
               width: 100%;
             }
           }
         </style>
       </head>
       <body>
-        <div class="standalone-wrapper ${templateClass}">
+        <div class="standalone-wrapper resume-paper ${templateClass} ${dateFontClass} ${marginClass} ${spacingClass}">
           ${previewHTML}
         </div>
         <script>
@@ -685,6 +807,54 @@ document.addEventListener('DOMContentLoaded', () => {
     `);
     printWindow.document.close();
   }
+
+  function autoFitToSinglePage() {
+    const previewEl = document.getElementById('resume-preview');
+    if (!previewEl) return;
+
+    // Reset temporary inline zoom/transforms on element before measuring scroll height
+    previewEl.style.transform = 'none';
+    previewEl.style.transformOrigin = 'top center';
+
+    // Target height for standard letter page: 11in (1056px at 96 DPI)
+    const targetPx = 1056;
+    const currentScrollHeight = previewEl.scrollHeight;
+
+    if (!resumeData.printSetup) resumeData.printSetup = {};
+
+    if (currentScrollHeight <= targetPx) {
+      resumeData.printSetup.scale = 100;
+      resumeData.printSetup.spacing = 'normal';
+      resumeData.printSetup.margins = 'normal';
+    } else {
+      // Calculate needed scale ratio
+      let calculatedScale = Math.floor((targetPx / currentScrollHeight) * 100);
+
+      // Clamp between 60% and 100%
+      if (calculatedScale < 60) {
+        calculatedScale = 60;
+        resumeData.printSetup.spacing = 'tight';
+        resumeData.printSetup.margins = 'compact';
+      } else if (calculatedScale < 85) {
+        resumeData.printSetup.spacing = 'tight';
+        resumeData.printSetup.margins = 'compact';
+      } else if (calculatedScale < 95) {
+        resumeData.printSetup.spacing = 'tight';
+      }
+      resumeData.printSetup.scale = calculatedScale;
+    }
+
+    saveData();
+    renderForm();
+    updatePreview();
+  }
+
+  window.togglePageBreak = (key, isChecked) => {
+    if (!resumeData.pageBreaks) resumeData.pageBreaks = {};
+    resumeData.pageBreaks[key] = isChecked;
+    saveData();
+    updatePreview();
+  };
 
   // --- Global Window Helpers for Dynamic Delete/Key handlers ---
   window.clearSection = (sectionName) => {
@@ -778,6 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return {
       selectedTemplate: data.selectedTemplate || 'modern',
       theme: Object.assign({ dateFont: 'default' }, data.theme || {}),
+      printSetup: Object.assign({ scale: 100, margins: 'normal', spacing: 'normal' }, data.printSetup || {}),
+      pageBreaks: Object.assign({}, data.pageBreaks || {}),
       headings: Object.assign({ work: 'Experience', education: 'Education', skills: 'Skills', projects: 'Projects', awards: 'Awards' }, data.headings || {}),
       basics: Object.assign({ name: '', email: '', phone: '', location: { address: '' }, website: '', summary: '' }, data.basics || {}),
       work: Array.isArray(data.work) ? data.work : [],

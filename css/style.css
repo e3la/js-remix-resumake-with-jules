@@ -433,6 +433,49 @@ body {
   gap: 10px;
 }
 
+/* Margin Variants */
+.resume-paper.margin-normal {
+  padding: 0.6in 0.75in;
+}
+
+.resume-paper.margin-compact {
+  padding: 0.35in 0.45in;
+}
+
+.resume-paper.margin-relaxed {
+  padding: 0.8in 1in;
+}
+
+/* Spacing Variants */
+.resume-paper.spacing-normal .resume-section {
+  margin-bottom: 16px;
+}
+.resume-paper.spacing-normal .resume-item {
+  margin-bottom: 10px;
+}
+
+.resume-paper.spacing-tight .resume-section {
+  margin-bottom: 10px;
+}
+.resume-paper.spacing-tight .resume-item {
+  margin-bottom: 5px;
+}
+.resume-paper.spacing-tight .resume-header {
+  margin-bottom: 10px;
+}
+.resume-paper.spacing-tight .summary-text,
+.resume-paper.spacing-tight .item-highlights,
+.resume-paper.spacing-tight .item-description {
+  font-size: 0.82rem;
+}
+
+.resume-paper.spacing-spacious .resume-section {
+  margin-bottom: 22px;
+}
+.resume-paper.spacing-spacious .resume-item {
+  margin-bottom: 14px;
+}
+
 /* Dynamic Resume Page Styles & Template Switching */
 .resume-page {
   font-family: 'Georgia', serif;
@@ -628,6 +671,25 @@ body {
 }
 .template-compact .item-highlights {
   padding-left: 14px;
+}
+
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+.page-break-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.page-break-toggle input[type="checkbox"] {
+  cursor: pointer;
 }
 
 /* Print Overrides */
