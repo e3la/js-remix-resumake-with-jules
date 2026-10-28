@@ -1,6 +1,9 @@
 # Resumake (Client-Side Vanilla JS)
 
-A free, open-source static resume generator written in client-side Vanilla JavaScript. No backend servers, external APIs, build steps, or npm dependencies required.
+A vibecoded open-source static resume generator written in client-side Vanilla JavaScript remake of resumake. No backend servers, external APIs, build steps, or npm dependencies required.
+
+When [resumake.io from saadq](https://github.com/saadq/resumake.io) went offline I cloned the github, and pointed jules.google.com at it and said, hey, remake this but client-side vanilla javascript and it did, and this is the result. 
+I don't know if this is an ethical engagement with AI. I don't know if there is ethical engagement with AI.
 
 ## Features
 
@@ -29,22 +32,6 @@ This project is built purely with standard HTML/CSS/JS files, making it complete
 
 ---
 
-### Neocities
+### Github Page
 
-To host on [Neocities](https://neocities.org):
-
-1. Log into your Neocities account.
-2. Drag and drop all project files (`index.html`, `.nojekyll`, `css/`, `js/`) into your Neocities upload manager (or use the Neocities CLI / WebDAV).
-3. Visit your Neocities URL!
-
----
-
-## Local Development
-
-Simply open `index.html` in any web browser or use a simple HTTP server:
-
-```bash
-npx serve .
-# or
-python3 -m http.server 8000
-```
+You can use it at [https://e3la.github.io/js-remix-resumake-with-jules/](https://e3la.github.io/js-remix-resumake-with-jules/)
