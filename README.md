@@ -35,3 +35,6 @@ This project is built purely with standard HTML/CSS/JS files, making it complete
 ### Github Page
 
 You can use it at [https://e3la.github.io/js-remix-resumake-with-jules/](https://e3la.github.io/js-remix-resumake-with-jules/)
+
+### License
+MIT © Saad Quadri
